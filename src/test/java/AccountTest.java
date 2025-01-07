@@ -1,0 +1,131 @@
+import jdk.jfr.Label;
+import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.kata.Account;
+import org.kata.Enum.OperationTypeEnum;
+import org.kata.data.Operation;
+import org.kata.exception.NotEnoughMoneyException;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
+public class AccountTest {
+    @Test
+    @Label("initialisation of Account")
+    public void initAccountTest() {
+        Account account = new Account();
+
+        // le compte est initialisé avec un montant de 0.0.
+        assertEquals(0.0, account.getBalance(), 0);
+        // aucune operation n'a été effectué sur le compte.
+        assertEquals(new ArrayList<Operation>(), account.getStatement());
+    }
+
+    @Test
+    @Label("deposit of 500.0 on Account")
+    public void despositAccountTest() {
+        Account account = new Account();
+        account.deposit(500.0);
+
+        // le montant sur le compte doit être égale à ce qui a été deposé sur le compte soit 500.0.
+        assertEquals(500.0, account.getBalance(), 0);
+
+        List<Operation> expectedOperation = new ArrayList<>();
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0, 500.0));
+
+        // une seule operation de depot doit être présente.
+        assertEquals(1, account.getStatement().size());
+        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+    }
+
+    @Test
+    @Label("two deposit of 500.0 and 250.0 on Account")
+    public void twoDespositAccountTest() {
+        Account account = new Account();
+        account.deposit(500.0);
+        account.deposit(250.0);
+
+        // le montant sur le compte doit être égale à ce qui a été deposé sur le compte soit 750.0(500.0+250.0).
+        assertEquals(750.0, account.getBalance(), 0);
+
+        List<Operation> expectedOperation = new ArrayList<>();
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0, 500.0));
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 250.0, 750.0));
+
+        // une seule operation de depot doit être présente.
+        assertEquals(2, account.getStatement().size());
+        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+        assertEquals(expectedOperation.get(1), account.getStatement().get(1));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "250.0:250.0",  // retrait d'une partie du montant present sur le compte
+            "500.0:0.0"     // retrait de tous l'argent present sur le compte
+    }, delimiter = ':')
+    @Label("deposit of 500.0 and valid withdraw on Account")
+    public void validWithdrawalAccountTest(double amount, double expectedBalance) {
+        Account account = new Account();
+        account.deposit(500.0);
+        account.withdrawal(amount);
+
+        // le montant doit être égal montant attendue.
+        assertEquals(expectedBalance, account.getBalance(), 0);
+
+        // une opération de depot et une opération de retrait doivent être présents.
+        List<Operation> expectedOperation = new ArrayList<>();
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0, 500.0));
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.WITHDRAWAL, amount, expectedBalance));
+
+        assertEquals(2, account.getStatement().size());
+        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+        assertEquals(expectedOperation.get(1), account.getStatement().get(1));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "500.01",
+            "750.0"
+    })
+    @Label("deposit of 500.0 and invalid withdraw on Account")
+    public void invalidWithdrawalAccountTest(double amount) {
+        Account account = new Account();
+        account.deposit(500.0);
+
+        // le montant retirer est supérieur à montant present sur le compte, une exception NotEnoughtException doit être renvoyé.
+        NotEnoughMoneyException exception = assertThrows(NotEnoughMoneyException.class, () -> account.withdrawal(amount));
+        assertEquals("You do not have the amount necessary for this operation.", exception.getMessage());
+
+        List<Operation> expectedOperation = new ArrayList<>();
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0, 500.0));
+
+        // l'argent ne doit pas être retiré du compte.
+        assertEquals(500.0, account.getBalance(), 0);
+
+        // seul l'opération de depot doit être présent.
+        assertEquals(1, account.getStatement().size());
+        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+    }
+
+    @Test
+    @Label("print all the statement of Account")
+    public void printStatementAccountTest() {
+        Account account = new Account();
+        account.deposit(500.0);
+        account.withdrawal(250.0);
+
+        // une opération de depot et une opération de retrait doivent être présents.
+        List<String> expected = new ArrayList<>();
+        expected.add(LocalDate.now() + ": montant de 500.0 déposé sur le compte, le nouveau montant du compte est de 500.0");
+        expected.add(LocalDate.now() + ": montant de 250.0 retiré du compte, le nouveau montant du compte est de 250.0");
+
+        List<String> statement = account.printStatement();
+        assertEquals(2, statement.size());
+        assertEquals(expected.get(0), statement.get(0));
+        assertEquals(expected.get(1), statement.get(1));
+    }
+}
