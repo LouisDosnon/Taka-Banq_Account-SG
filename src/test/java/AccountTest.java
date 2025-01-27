@@ -5,6 +5,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.kata.Account;
 import org.kata.Enum.OperationTypeEnum;
 import org.kata.data.Operation;
+import org.kata.exception.AmountTooHighException;
+import org.kata.exception.NegativeAmountException;
 import org.kata.exception.NotEnoughMoneyException;
 
 import java.time.LocalDate;
@@ -27,7 +29,7 @@ public class AccountTest {
 
     @Test
     @Label("deposit of 500.0 on Account")
-    public void despositAccountTest() {
+    public void depositAccountTest() {
         Account account = new Account();
         account.deposit(500.0);
 
@@ -35,7 +37,7 @@ public class AccountTest {
         assertEquals(500.0, account.getBalance(), 0);
 
         List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0, 500.0));
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0));
 
         // une seule operation de depot doit être présente.
         assertEquals(1, account.getStatement().size());
@@ -43,8 +45,62 @@ public class AccountTest {
     }
 
     @Test
+    @Label("deposit of Double.MAX_VALUE on Account")
+    public void maxDepositAccountTest() {
+        Account account = new Account();
+        account.deposit(Double.MAX_VALUE);
+
+        // le montant sur le compte doit être égale à ce qui a été deposé sur le compte soit Double.MAX_VALUE.
+        assertEquals(Double.MAX_VALUE, account.getBalance(), 0);
+
+        List<Operation> expectedOperation = new ArrayList<>();
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, Double.MAX_VALUE));
+
+        // une seule operation de depot doit être présente.
+        assertEquals(1, account.getStatement().size());
+        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+    }
+
+    @Test
+    @Label("deposit of -1.0 on Account should failed")
+    public void invalidNegativeDepositAccountTest() {
+        Account account = new Account();
+
+        // le montant sur le compte étant inférieur à 0, une erreur doit être renvoyé.
+        NegativeAmountException exception = assertThrows(NegativeAmountException.class, () -> account.deposit(-1.0));
+        assertEquals("Amount cannot be negative.", exception.getMessage());
+
+        // le compte ne doit pas être modifié
+        assertEquals(0.0, account.getBalance(), 0.0);
+        // une seule operation de depot doit être présente.
+        assertEquals(0.0, account.getStatement().size(), 0.0);
+        assertEquals(new ArrayList<Operation>(), account.getStatement());
+    }
+
+    @Test
+    @Label("deposit of Double.MAX_VALUE on Account should failed")
+    public void invalidAmountTooHighDepositAccountTest() {
+        Account account = new Account();
+        account.deposit(1.0);
+
+        // le montant sur le compte étant supérieur à Double.MAX_VALUE, une erreur doit être renvoyé.
+        AmountTooHighException exception = assertThrows(AmountTooHighException.class, () -> account.deposit(Double.MAX_VALUE));
+        assertEquals("Amount is too high.", exception.getMessage());
+
+        // le compte ne doit pas être modifier
+        assertEquals(1.0, account.getBalance(), 0.0);
+
+        // une seule operation de depot doit être présente
+        List<Operation> expectedOperation = new ArrayList<>();
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 1.0));
+
+        assertEquals(1.0, account.getStatement().size(), 0.0);
+        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+    }
+
+    @Test
     @Label("two deposit of 500.0 and 250.0 on Account")
-    public void twoDespositAccountTest() {
+    public void twoDepositAccountTest() {
         Account account = new Account();
         account.deposit(500.0);
         account.deposit(250.0);
@@ -53,8 +109,8 @@ public class AccountTest {
         assertEquals(750.0, account.getBalance(), 0);
 
         List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0, 500.0));
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 250.0, 750.0));
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0));
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 250.0));
 
         // une seule operation de depot doit être présente.
         assertEquals(2, account.getStatement().size());
@@ -78,8 +134,8 @@ public class AccountTest {
 
         // une opération de depot et une opération de retrait doivent être présents.
         List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0, 500.0));
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.WITHDRAWAL, amount, expectedBalance));
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0));
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.WITHDRAWAL, amount));
 
         assertEquals(2, account.getStatement().size());
         assertEquals(expectedOperation.get(0), account.getStatement().get(0));
@@ -101,7 +157,28 @@ public class AccountTest {
         assertEquals("You do not have the amount necessary for this operation.", exception.getMessage());
 
         List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0, 500.0));
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0));
+
+        // l'argent ne doit pas être retiré du compte.
+        assertEquals(500.0, account.getBalance(), 0);
+
+        // seul l'opération de depot doit être présent.
+        assertEquals(1, account.getStatement().size());
+        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+    }
+
+    @Test
+    @Label("deposit of -1.0 and invalid withdraw on Account")
+    public void invalidNegativeWithdrawalAccountTest() {
+        Account account = new Account();
+        account.deposit(500.0);
+
+        // le montant retirer est supérieur à montant present sur le compte, une exception NotEnoughtException doit être renvoyé.
+        NegativeAmountException exception = assertThrows(NegativeAmountException.class, () -> account.withdrawal(-1));
+        assertEquals("Amount cannot be negative.", exception.getMessage());
+
+        List<Operation> expectedOperation = new ArrayList<>();
+        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0));
 
         // l'argent ne doit pas être retiré du compte.
         assertEquals(500.0, account.getBalance(), 0);
