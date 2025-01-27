@@ -1,7 +1,7 @@
 package org.kata;
 
-import org.kata.Enum.OperationTypeEnum;
-import org.kata.data.Operation;
+import org.kata.Enum.StatementTypeEnum;
+import org.kata.data.Statement;
 import org.kata.exception.AmountTooHighException;
 import org.kata.exception.NegativeAmountException;
 import org.kata.exception.NotEnoughMoneyException;
@@ -17,13 +17,13 @@ public class Account {
      */
     private double balance;
     /**
-     * Liste des opérations effectuez sur le compte
+     * Liste des statements effectuez sur le compte
      */
-    private List<Operation> operationList;
+    private List<Statement> statementList;
 
     public Account() {
         this.balance = 0;
-        this.operationList = new ArrayList<>();
+        this.statementList = new ArrayList<>();
     }
 
     public double getBalance() {
@@ -42,7 +42,7 @@ public class Account {
         if (this.balance > Double.MAX_VALUE - amount) throw new AmountTooHighException();
 
         this.balance += amount;
-        this.operationList.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, amount));
+        this.statementList.add(new Statement(LocalDate.now(), StatementTypeEnum.DEPOSIT, amount));
     }
 
     /**
@@ -59,15 +59,15 @@ public class Account {
         if (amount > this.balance) throw new NotEnoughMoneyException();
 
         this.balance -= amount;
-        this.operationList.add(new Operation(LocalDate.now(), OperationTypeEnum.WITHDRAWAL, amount));
+        this.statementList.add(new Statement(LocalDate.now(), StatementTypeEnum.WITHDRAWAL, amount));
     }
 
     /**
      * Renvoie la liste des operations effectué sur le compte
      * @return la liste des operations effectué sur le compte
      */
-    public List<Operation> getStatement() {
-        return this.operationList;
+    public List<Statement> getStatement() {
+        return this.statementList;
     }
 
     /**
@@ -77,11 +77,11 @@ public class Account {
     public List<String> printStatement() {
         List<String> statementList = new ArrayList<>();
         double currentbalance = 0;
-        for (Operation operation: this.operationList) {
-            if (OperationTypeEnum.DEPOSIT.equals(operation.type())) currentbalance += operation.amount();
-            else currentbalance -= operation.amount();
+        for (Statement statement : this.statementList) {
+            if (StatementTypeEnum.DEPOSIT.equals(statement.type())) currentbalance += statement.amount();
+            else currentbalance -= statement.amount();
             statementList.add(
-                    operation.date() + ": montant de " + operation.amount() + (OperationTypeEnum.DEPOSIT.equals(operation.type()) ? " déposé sur le" : " retiré du") + " compte, le nouveau montant du compte est de " + currentbalance
+                    statement.date() + ": montant de " + statement.amount() + (StatementTypeEnum.DEPOSIT.equals(statement.type()) ? " déposé sur le" : " retiré du") + " compte, le nouveau montant du compte est de " + currentbalance
             );
         }
         return statementList;

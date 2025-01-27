@@ -1,6 +1,6 @@
 package org.kata.Enum;
 
-public enum OperationTypeEnum {
+public enum StatementTypeEnum {
     /**
      * Depot sur le compte
      */
@@ -13,7 +13,7 @@ public enum OperationTypeEnum {
     private String type;
 
 
-    OperationTypeEnum(String type) {
+    StatementTypeEnum(String type) {
         this.type = type;
     }
 

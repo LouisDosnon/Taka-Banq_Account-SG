@@ -3,8 +3,8 @@ import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.kata.Account;
-import org.kata.Enum.OperationTypeEnum;
-import org.kata.data.Operation;
+import org.kata.Enum.StatementTypeEnum;
+import org.kata.data.Statement;
 import org.kata.exception.AmountTooHighException;
 import org.kata.exception.NegativeAmountException;
 import org.kata.exception.NotEnoughMoneyException;
@@ -23,8 +23,8 @@ public class AccountTest {
 
         // le compte est initialisé avec un montant de 0.0.
         assertEquals(0.0, account.getBalance(), 0);
-        // aucune operation n'a été effectué sur le compte.
-        assertEquals(new ArrayList<Operation>(), account.getStatement());
+        // aucune opération n'a été effectué sur le compte.
+        assertEquals(new ArrayList<Statement>(), account.getStatement());
     }
 
     @Test
@@ -36,12 +36,12 @@ public class AccountTest {
         // le montant sur le compte doit être égale à ce qui a été deposé sur le compte soit 500.0.
         assertEquals(500.0, account.getBalance(), 0);
 
-        List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0));
+        List<Statement> expectedStatement = new ArrayList<>();
+        expectedStatement.add(new Statement(LocalDate.now(), StatementTypeEnum.DEPOSIT, 500.0));
 
-        // une seule operation de depot doit être présente.
+        // une seule opération de depot doit être présente.
         assertEquals(1, account.getStatement().size());
-        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+        assertEquals(expectedStatement.get(0), account.getStatement().get(0));
     }
 
     @Test
@@ -53,12 +53,12 @@ public class AccountTest {
         // le montant sur le compte doit être égale à ce qui a été deposé sur le compte soit Double.MAX_VALUE.
         assertEquals(Double.MAX_VALUE, account.getBalance(), 0);
 
-        List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, Double.MAX_VALUE));
+        List<Statement> expectedStatement = new ArrayList<>();
+        expectedStatement.add(new Statement(LocalDate.now(), StatementTypeEnum.DEPOSIT, Double.MAX_VALUE));
 
-        // une seule operation de depot doit être présente.
+        // une seule opération de depot doit être présente.
         assertEquals(1, account.getStatement().size());
-        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+        assertEquals(expectedStatement.get(0), account.getStatement().get(0));
     }
 
     @Test
@@ -72,9 +72,9 @@ public class AccountTest {
 
         // le compte ne doit pas être modifié
         assertEquals(0.0, account.getBalance(), 0.0);
-        // une seule operation de depot doit être présente.
+        // une seule opération de depot doit être présente.
         assertEquals(0.0, account.getStatement().size(), 0.0);
-        assertEquals(new ArrayList<Operation>(), account.getStatement());
+        assertEquals(new ArrayList<Statement>(), account.getStatement());
     }
 
     @Test
@@ -90,12 +90,12 @@ public class AccountTest {
         // le compte ne doit pas être modifier
         assertEquals(1.0, account.getBalance(), 0.0);
 
-        // une seule operation de depot doit être présente
-        List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 1.0));
+        // une seule opération de depot doit être présente
+        List<Statement> expectedStatement = new ArrayList<>();
+        expectedStatement.add(new Statement(LocalDate.now(), StatementTypeEnum.DEPOSIT, 1.0));
 
         assertEquals(1.0, account.getStatement().size(), 0.0);
-        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+        assertEquals(expectedStatement.get(0), account.getStatement().get(0));
     }
 
     @Test
@@ -108,14 +108,14 @@ public class AccountTest {
         // le montant sur le compte doit être égale à ce qui a été deposé sur le compte soit 750.0(500.0+250.0).
         assertEquals(750.0, account.getBalance(), 0);
 
-        List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0));
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 250.0));
+        List<Statement> expectedStatement = new ArrayList<>();
+        expectedStatement.add(new Statement(LocalDate.now(), StatementTypeEnum.DEPOSIT, 500.0));
+        expectedStatement.add(new Statement(LocalDate.now(), StatementTypeEnum.DEPOSIT, 250.0));
 
-        // une seule operation de depot doit être présente.
+        // une seule opération de depot doit être présente.
         assertEquals(2, account.getStatement().size());
-        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
-        assertEquals(expectedOperation.get(1), account.getStatement().get(1));
+        assertEquals(expectedStatement.get(0), account.getStatement().get(0));
+        assertEquals(expectedStatement.get(1), account.getStatement().get(1));
     }
 
     @ParameterizedTest
@@ -133,13 +133,13 @@ public class AccountTest {
         assertEquals(expectedBalance, account.getBalance(), 0);
 
         // une opération de depot et une opération de retrait doivent être présents.
-        List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0));
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.WITHDRAWAL, amount));
+        List<Statement> expectedStatement = new ArrayList<>();
+        expectedStatement.add(new Statement(LocalDate.now(), StatementTypeEnum.DEPOSIT, 500.0));
+        expectedStatement.add(new Statement(LocalDate.now(), StatementTypeEnum.WITHDRAWAL, amount));
 
         assertEquals(2, account.getStatement().size());
-        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
-        assertEquals(expectedOperation.get(1), account.getStatement().get(1));
+        assertEquals(expectedStatement.get(0), account.getStatement().get(0));
+        assertEquals(expectedStatement.get(1), account.getStatement().get(1));
     }
 
     @ParameterizedTest
@@ -156,15 +156,15 @@ public class AccountTest {
         NotEnoughMoneyException exception = assertThrows(NotEnoughMoneyException.class, () -> account.withdrawal(amount));
         assertEquals("You do not have the amount necessary for this operation.", exception.getMessage());
 
-        List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0));
+        List<Statement> expectedStatement = new ArrayList<>();
+        expectedStatement.add(new Statement(LocalDate.now(), StatementTypeEnum.DEPOSIT, 500.0));
 
         // l'argent ne doit pas être retiré du compte.
         assertEquals(500.0, account.getBalance(), 0);
 
         // seul l'opération de depot doit être présent.
         assertEquals(1, account.getStatement().size());
-        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+        assertEquals(expectedStatement.get(0), account.getStatement().get(0));
     }
 
     @Test
@@ -177,15 +177,15 @@ public class AccountTest {
         NegativeAmountException exception = assertThrows(NegativeAmountException.class, () -> account.withdrawal(-1));
         assertEquals("Amount cannot be negative.", exception.getMessage());
 
-        List<Operation> expectedOperation = new ArrayList<>();
-        expectedOperation.add(new Operation(LocalDate.now(), OperationTypeEnum.DEPOSIT, 500.0));
+        List<Statement> expectedStatement = new ArrayList<>();
+        expectedStatement.add(new Statement(LocalDate.now(), StatementTypeEnum.DEPOSIT, 500.0));
 
         // l'argent ne doit pas être retiré du compte.
         assertEquals(500.0, account.getBalance(), 0);
 
         // seul l'opération de depot doit être présent.
         assertEquals(1, account.getStatement().size());
-        assertEquals(expectedOperation.get(0), account.getStatement().get(0));
+        assertEquals(expectedStatement.get(0), account.getStatement().get(0));
     }
 
     @Test
